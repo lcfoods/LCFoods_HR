@@ -8,7 +8,7 @@ const USERS_KEY = 'hrm_users';
 
 // Initial Mock Data with Hierarchy (Translated to Vietnamese)
 const INITIAL_CATEGORIES: Category[] = [
-  // Companies
+  // Companies        
   { id: 'c1', code: 'LCF', name: 'Tập đoàn LCFoods', type: 'COMPANY', parentId: null },
   { id: 'c2', code: 'LCF_LOG', name: 'LCFoods Logistics', type: 'COMPANY', parentId: null },
 
