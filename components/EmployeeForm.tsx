@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Employee, Category } from '../types';
 import { StorageService } from '../services/storageService';
@@ -70,51 +69,77 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ currentCompanyId, ed
     }
   }, [currentCompanyId, editingEmployeeId]);
 
-  // --- Address Logic Helpers ---
+  // --- Address Logic Helpers (FIXED) ---
+  
+  // 1. Get List of Provinces (Items with no parent)
   const provinces = useMemo(() => adminUnits.filter(u => !u.parentId), [adminUnits]);
   
-  const districts = useMemo(() => {
-      if (formData.isNewAdminSystem) return []; // New system has no district level in usage logic
-      return adminUnits.filter(u => u.parentId === formData.provinceCode);
-  }, [adminUnits, formData.provinceCode, formData.isNewAdminSystem]);
+  // 2. Resolve Province ID from the selected Province Code
+  // IMPORTANT: We store 'Code' in formData, but hierarchy uses 'ID' for parentId
+  const selectedProvinceId = useMemo(() => {
+      if (!formData.provinceCode) return null;
+      // Find the unit that has the selected code (and is likely a province/root)
+      const unit = adminUnits.find(u => u.code === formData.provinceCode);
+      return unit ? unit.id : null;
+  }, [adminUnits, formData.provinceCode]);
 
+  // 3. Resolve District ID from the selected District Code
+  const selectedDistrictId = useMemo(() => {
+      if (!formData.districtCode) return null;
+      const unit = adminUnits.find(u => u.code === formData.districtCode);
+      return unit ? unit.id : null;
+  }, [adminUnits, formData.districtCode]);
+
+  // 4. Filter Districts
+  // Show if: Not New Admin System AND Province is Selected
+  const districts = useMemo(() => {
+      if (formData.isNewAdminSystem || !selectedProvinceId) return []; 
+      // Return units whose parent is the selected Province ID
+      return adminUnits.filter(u => u.parentId === selectedProvinceId);
+  }, [adminUnits, selectedProvinceId, formData.isNewAdminSystem]);
+
+  // 5. Filter Wards
   const wards = useMemo(() => {
-      if (!formData.provinceCode) return [];
       if (formData.isNewAdminSystem) {
-          // New System: Ward child of Province
-          return adminUnits.filter(u => u.parentId === formData.provinceCode);
+          // If New System: Wards are direct children of Province
+          if (!selectedProvinceId) return [];
+          return adminUnits.filter(u => u.parentId === selectedProvinceId);
       } else {
-          // Old System: Ward child of District
-          if (!formData.districtCode) return [];
-          return adminUnits.filter(u => u.parentId === formData.districtCode);
+          // If Old System: Wards are children of District
+          if (!selectedDistrictId) return [];
+          return adminUnits.filter(u => u.parentId === selectedDistrictId);
       }
-  }, [adminUnits, formData.provinceCode, formData.districtCode, formData.isNewAdminSystem]);
+  }, [adminUnits, selectedProvinceId, selectedDistrictId, formData.isNewAdminSystem]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-        const checked = (e.target as HTMLInputElement).checked;
-        setFormData(prev => ({ 
+    
+    setFormData(prev => {
+        const newData = { 
             ...prev, 
-            [name]: checked,
-            // Reset dependent fields when mode toggles
-            districtCode: '',
-            wardCode: ''
-        }));
-    } else {
-        setFormData(prev => ({ ...prev, [name]: value }));
-        // Cascading resets
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value 
+        };
+
+        // Cascading Reset Logic
+        if (name === 'isNewAdminSystem') {
+             // Reset children when toggling system
+             newData.districtCode = '';
+             newData.wardCode = '';
+        }
         if (name === 'provinceCode') {
-            setFormData(prev => ({ ...prev, provinceCode: value, districtCode: '', wardCode: '' }));
+            // Reset lower levels when province changes
+            newData.districtCode = '';
+            newData.wardCode = '';
         }
         if (name === 'districtCode') {
-            setFormData(prev => ({ ...prev, districtCode: value, wardCode: '' }));
+            // Reset ward when district changes
+            newData.wardCode = '';
         }
-    }
+        return newData;
+    });
   };
 
   const verifyAddress = async () => {
-    // Construct address for verification
     const prov = adminUnits.find(u => u.code === formData.provinceCode)?.name || '';
     const dist = adminUnits.find(u => u.code === formData.districtCode)?.name || '';
     const ward = adminUnits.find(u => u.code === formData.wardCode)?.name || '';
@@ -145,7 +170,6 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ currentCompanyId, ed
       return false;
     }
     
-    // Address validation
     if (!formData.provinceCode) {
         setFormStatus({ type: 'error', msg: "Vui lòng chọn Tỉnh/Thành phố." as any });
         return false;
@@ -208,7 +232,6 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ currentCompanyId, ed
 
         <form onSubmit={handleSubmit} className="p-6 space-y-8">
           
-          {/* Section 1: Personal Info */}
           <div className="space-y-4">
             <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">{t.employeeForm.personalInfo}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -280,12 +303,11 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ currentCompanyId, ed
               </div>
             </div>
             
-            {/* New Address Section */}
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                <div className="flex items-center justify-between mb-3">
                    <label className="block text-sm font-bold text-slate-700">{t.employeeForm.fields.addressLabel}</label>
                    
-                   <label className="flex items-center gap-2 cursor-pointer">
+                   <label className="flex items-center gap-2 cursor-pointer select-none">
                        <input 
                            type="checkbox" 
                            name="isNewAdminSystem"
@@ -298,7 +320,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ currentCompanyId, ed
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                   {/* Province */}
+                   {/* Province Selection */}
                    <div>
                        <label className="block text-xs font-medium text-slate-500 mb-1">{t.employeeForm.fields.province}</label>
                        <select
@@ -314,7 +336,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ currentCompanyId, ed
                        </select>
                    </div>
 
-                   {/* District - Hide if New Admin System */}
+                   {/* District Selection - Only show if NOT New Admin System */}
                    {!formData.isNewAdminSystem && (
                        <div>
                            <label className="block text-xs font-medium text-slate-500 mb-1">{t.employeeForm.fields.district}</label>
@@ -333,14 +355,18 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ currentCompanyId, ed
                        </div>
                    )}
 
-                   {/* Ward */}
+                   {/* Ward Selection */}
                    <div>
                        <label className="block text-xs font-medium text-slate-500 mb-1">{t.employeeForm.fields.ward}</label>
                        <select
                            name="wardCode"
                            value={formData.wardCode}
                            onChange={handleInputChange}
-                           disabled={!formData.provinceCode || (!formData.isNewAdminSystem && !formData.districtCode)}
+                           // Disable if no parent selected
+                           disabled={
+                               !formData.provinceCode || 
+                               (!formData.isNewAdminSystem && !formData.districtCode)
+                           }
                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm disabled:bg-slate-100 disabled:text-slate-400"
                        >
                            <option value="">{t.employeeForm.placeholders.select}</option>
@@ -374,7 +400,6 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ currentCompanyId, ed
                         </button>
                    </div>
                    
-                   {/* Verification Result */}
                    {verificationResult && (
                      <div className={`mt-2 p-2 rounded border text-xs animate-in fade-in slide-in-from-top-1 ${
                         verificationResult.isValid 
@@ -397,7 +422,6 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ currentCompanyId, ed
 
           <hr className="border-slate-100" />
 
-          {/* Section 2: Professional Info */}
           <div className="space-y-4">
             <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">{t.employeeForm.employmentDetails}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -486,7 +510,6 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ currentCompanyId, ed
             </div>
           </div>
 
-          {/* Form Actions */}
           <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
             <div>
               {formStatus.type === 'error' && (

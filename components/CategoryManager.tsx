@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Category } from '../types';
 import { StorageService } from '../services/storageService';
@@ -122,7 +121,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
                  <span className="ml-2 text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-normal">Tỉnh/TP</span>
             )}
              {type === 'ADMIN_UNIT' && level === 1 && (
-                 <span className="ml-2 text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-normal">Quận/Huyện/P.TT.TP</span>
+                 <span className="ml-2 text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-normal">Quận/Huyện</span>
             )}
             {/* Visual indicator if this company has a custom Sync URL */}
             {type === 'COMPANY' && node.appScriptUrl && (
@@ -132,13 +131,16 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
             )}
           </td>
           <td className="px-6 py-4 text-sm text-slate-500 truncate max-w-xs">{node.description || '-'}</td>
-          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={() => handleEdit(node)} className="text-blue-600 hover:text-blue-900 mr-4">
-              <Edit2 className="w-4 h-4" />
-            </button>
-            <button onClick={() => handleDelete(node.id)} className="text-red-600 hover:text-red-900">
-              <Trash2 className="w-4 h-4" />
-            </button>
+          {/* REMOVED opacity-0 class here so buttons are always visible */}
+          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <div className="flex justify-end gap-3">
+                <button onClick={() => handleEdit(node)} className="text-blue-600 hover:text-blue-900" title={t.common.edit}>
+                <Edit2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => handleDelete(node.id)} className="text-red-600 hover:text-red-900" title={t.common.delete}>
+                <Trash2 className="w-4 h-4" />
+                </button>
+            </div>
           </td>
         </tr>
         {renderTree(node.id, level + 1)}
@@ -217,13 +219,15 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
                             )}
                         </td>
                         <td className="px-6 py-4 text-sm text-slate-500 truncate max-w-xs">{cat.description || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => handleEdit(cat)} className="text-blue-600 hover:text-blue-900 mr-4">
-                                <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => handleDelete(cat.id)} className="text-red-600 hover:text-red-900">
-                                <Trash2 className="w-4 h-4" />
-                            </button>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex justify-end gap-3">
+                                <button onClick={() => handleEdit(cat)} className="text-blue-600 hover:text-blue-900" title={t.common.edit}>
+                                    <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleDelete(cat.id)} className="text-red-600 hover:text-red-900" title={t.common.delete}>
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 ))
