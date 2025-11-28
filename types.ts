@@ -21,6 +21,8 @@ export interface Category {
   description?: string;
   type: 'DEPARTMENT' | 'POSITION' | 'LOCATION' | 'ADMIN_UNIT' | 'COMPANY';
   parentId?: string | null; // For hierarchical data (Departments, Admin Units)
+  appScriptUrl?: string;
+  googleSheetUrl?: string;
 }
 
 export interface SystemSettings {
@@ -36,7 +38,16 @@ export interface Employee {
   phone: string;
   dob: string;
   gender: 'Male' | 'Female' | 'Other';
-  address: string;
+  
+  // New Address Fields
+  addressDetail: string; // Số nhà, đường
+  provinceCode: string;  // Mã Tỉnh/Thành
+  districtCode: string;  // Mã Quận/Huyện (Optional nếu là cơ chế mới)
+  wardCode: string;      // Mã Phường/Xã
+  isNewAdminSystem: boolean; // True = 2 cấp, False = 3 cấp
+  address?: string; // Computed full address for display/legacy
+
+  jobTitle?: string;
   departmentCode: string;
   positionCode: string;
   locationCode: string;

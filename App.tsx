@@ -11,11 +11,13 @@ import { Dashboard } from './components/Dashboard';
 import { User, UserRole, Category } from './types';
 import { StorageService } from './services/storageService';
 import { Building, AlertCircle, Briefcase } from 'lucide-react';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 
-export default function App() {
+function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const { t } = useLanguage();
   
   // Login State
   const [loginError, setLoginError] = useState('');
@@ -27,6 +29,9 @@ export default function App() {
 
   // Selected Employee for Details View
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  
+  // Editing Employee State
+  const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null);
 
   // Load companies on mount (Available for both Login and App)
   useEffect(() => {
@@ -42,8 +47,6 @@ export default function App() {
   // Update App context when User changes
   useEffect(() => {
     if (user && companies.length > 0) {
-        // If the user just logged in, currentCompanyId is already set by handleLogin
-        // This effect ensures we handle direct company switching rules if needed later
         if (!currentCompanyId) {
              if (user.role === UserRole.STAFF && user.companyId) {
                  setCurrentCompanyId(user.companyId);
@@ -66,9 +69,8 @@ export default function App() {
 
     if (authenticatedUser) {
         // 2. Validate Company Access
-        // Admin can access any company. Staff must match their assigned companyId.
         if (authenticatedUser.role !== UserRole.ADMIN && authenticatedUser.companyId !== loginCompanyId) {
-            setLoginError('You do not have access to the selected company.');
+            setLoginError(t.auth.noAccess);
             return;
         }
 
@@ -77,7 +79,7 @@ export default function App() {
         setCurrentCompanyId(loginCompanyId); // Set the session context to the selected company
         setCurrentPage('dashboard');
     } else {
-        setLoginError('Invalid email or password.');
+        setLoginError(t.auth.invalid);
     }
   };
 
@@ -86,10 +88,19 @@ export default function App() {
     setCurrentPage('employee-detail');
   };
 
+  const handleEditEmployee = (id: string) => {
+      setEditingEmployeeId(id);
+      setCurrentPage('employees');
+  };
+
+  const handleAddNewEmployee = () => {
+      setEditingEmployeeId(null);
+      setCurrentPage('employees');
+  };
+
   const renderContent = () => {
-    // If no company selected yet, show loading or empty
     if (!currentCompanyId) {
-        return <div className="p-8 text-center text-slate-500">Loading companies... or no companies defined.</div>;
+        return <div className="p-8 text-center text-slate-500">{t.common.loading}</div>;
     }
 
     switch (currentPage) {
@@ -99,8 +110,9 @@ export default function App() {
         return (
           <EmployeeList 
             currentCompanyId={currentCompanyId} 
-            onAddNew={() => setCurrentPage('employees')} 
+            onAddNew={handleAddNewEmployee} 
             onSelectEmployee={handleSelectEmployee}
+            onEditEmployee={handleEditEmployee}
           />
         );
       case 'employee-detail':
@@ -114,19 +126,32 @@ export default function App() {
             />
         );
       case 'employees':
-        return <EmployeeForm currentCompanyId={currentCompanyId} />;
+        return (
+            <EmployeeForm 
+                currentCompanyId={currentCompanyId} 
+                editingEmployeeId={editingEmployeeId}
+                onCancel={() => {
+                    setEditingEmployeeId(null);
+                    setCurrentPage('employee-list');
+                }}
+                onSaveSuccess={() => {
+                    setEditingEmployeeId(null);
+                    setCurrentPage('employee-list');
+                }}
+            />
+        );
       case 'companies':
          return user?.role === UserRole.ADMIN 
-          ? <CategoryManager type="COMPANY" title="Companies" /> 
+          ? <CategoryManager type="COMPANY" title={t.sidebar.companies} /> 
           : <div className="text-center py-10 text-red-500">Access Denied</div>;
       case 'departments':
-        return <CategoryManager type="DEPARTMENT" title="Departments" isHierarchical={true} />;
+        return <CategoryManager type="DEPARTMENT" title={t.sidebar.departments} isHierarchical={true} />;
       case 'positions':
-        return <CategoryManager type="POSITION" title="Positions" />;
+        return <CategoryManager type="POSITION" title={t.sidebar.positions} />;
       case 'locations':
-        return <CategoryManager type="LOCATION" title="Office Locations" />;
+        return <CategoryManager type="LOCATION" title={t.sidebar.locations} />;
       case 'admin-units':
-        return <CategoryManager type="ADMIN_UNIT" title="Administrative Units" isHierarchical={true} />;
+        return <CategoryManager type="ADMIN_UNIT" title={t.sidebar.adminUnits} isHierarchical={true} />;
       case 'settings':
         return <Settings />;
       case 'users':
@@ -147,7 +172,7 @@ export default function App() {
             LCFoods Group
           </h2>
           <p className="mt-2 text-center text-sm text-slate-600">
-            HR Management System
+            {t.auth.title}
           </p>
         </div>
 
@@ -158,7 +183,7 @@ export default function App() {
               {/* Company Selection */}
               <div>
                 <label htmlFor="company" className="block text-sm font-medium text-slate-700">
-                  Select Company
+                  {t.auth.selectCompany}
                 </label>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -180,7 +205,7 @@ export default function App() {
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                  Email address
+                  {t.auth.email}
                 </label>
                 <div className="mt-1">
                   <input
@@ -197,7 +222,7 @@ export default function App() {
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                  Password
+                  {t.auth.password}
                 </label>
                 <div className="mt-1">
                   <input
@@ -224,7 +249,7 @@ export default function App() {
                   disabled={companies.length === 0}
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {companies.length === 0 ? 'Loading System...' : 'Sign in'}
+                  {companies.length === 0 ? t.auth.loadingSystem : t.auth.signIn}
                 </button>
               </div>
             </form>
@@ -234,7 +259,7 @@ export default function App() {
                    <div className="w-full border-t border-slate-300" />
                  </div>
                  <div className="relative flex justify-center text-sm">
-                   <span className="px-2 bg-white text-slate-500">Demo Credentials</span>
+                   <span className="px-2 bg-white text-slate-500">{t.auth.demo}</span>
                  </div>
                </div>
                <div className="mt-2 grid grid-cols-1 gap-2 text-center text-xs text-slate-400">
@@ -265,5 +290,13 @@ export default function App() {
       {renderContent()}
       <SmartAssistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
     </Layout>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
