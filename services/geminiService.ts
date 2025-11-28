@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 
 const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
-
+     
 export const GeminiService = {
   /**
    * Chat with HR Assistant. Uses Flash for speed, Pro for complex reasoning.
