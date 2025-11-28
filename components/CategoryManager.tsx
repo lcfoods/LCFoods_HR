@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Category } from '../types';
 import { StorageService } from '../services/storageService';
-import { Plus, Download, Trash2, Edit2, Save, X, FileText, ChevronRight, ChevronDown, FolderTree, AlertTriangle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { Plus, Download, Trash2, Edit2, Save, X, FileText, ChevronRight, ChevronDown, FolderTree, AlertTriangle, Link, ExternalLink } from 'lucide-react';
 
 interface CategoryManagerProps {
   type: Category['type'];
@@ -13,13 +15,16 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
   const [categories, setCategories] = useState<Category[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const { t } = useLanguage();
   
   // Form State
   const [formData, setFormData] = useState<Partial<Category>>({
     code: '',
     name: '',
     description: '',
-    parentId: ''
+    parentId: '',
+    appScriptUrl: '',
+    googleSheetUrl: ''
   });
   const [error, setError] = useState('');
 
@@ -36,7 +41,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
     setError('');
 
     if (!formData.code || !formData.name) {
-      setError('Code and Name are required.');
+      setError(t.categoryManager.reqFields);
       return;
     }
 
@@ -46,7 +51,9 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
       name: formData.name,
       description: formData.description || '',
       type: type,
-      parentId: formData.parentId || null
+      parentId: formData.parentId || null,
+      appScriptUrl: formData.appScriptUrl || undefined,
+      googleSheetUrl: formData.googleSheetUrl || undefined
     };
 
     const result = StorageService.saveCategory(newCategory);
@@ -55,7 +62,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
       loadData();
       handleCloseModal();
     } else {
-      setError(result.error || 'Failed to save');
+      setError(result.error || t.common.error);
     }
   };
 
@@ -64,14 +71,16 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
       code: cat.code,
       name: cat.name,
       description: cat.description,
-      parentId: cat.parentId || ''
+      parentId: cat.parentId || '',
+      appScriptUrl: cat.appScriptUrl || '',
+      googleSheetUrl: cat.googleSheetUrl || ''
     });
     setEditingId(cat.id);
     setIsModalOpen(true);
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this category? If it has sub-categories, they will also be deleted.')) {
+    if (window.confirm(t.categoryManager.confirmDelete)) {
       StorageService.deleteCategory(id);
       loadData();
     }
@@ -80,7 +89,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
-    setFormData({ code: '', name: '', description: '', parentId: '' });
+    setFormData({ code: '', name: '', description: '', parentId: '', appScriptUrl: '', googleSheetUrl: '' });
     setError('');
   };
 
@@ -99,7 +108,9 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
                 <span className="text-slate-300 mr-2">└─</span>
               )}
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                level === 0 ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'
+                level === 0 ? 'bg-blue-100 text-blue-800' : 
+                level === 1 ? 'bg-indigo-100 text-indigo-800' :
+                'bg-slate-100 text-slate-700'
               }`}>
                 {node.code}
               </span>
@@ -108,10 +119,16 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
             {node.name}
             {type === 'ADMIN_UNIT' && level === 0 && (
-                 <span className="ml-2 text-xs text-slate-400 font-normal">(Prov/City)</span>
+                 <span className="ml-2 text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-normal">Tỉnh/TP</span>
             )}
              {type === 'ADMIN_UNIT' && level === 1 && (
-                 <span className="ml-2 text-xs text-slate-400 font-normal">(Dist/Ward)</span>
+                 <span className="ml-2 text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-normal">Quận/Huyện/P.TT.TP</span>
+            )}
+            {/* Visual indicator if this company has a custom Sync URL */}
+            {type === 'COMPANY' && node.appScriptUrl && (
+                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800" title={t.categoryManager.synced}>
+                    <Link className="w-3 h-3 mr-1" /> {t.categoryManager.synced}
+                </span>
             )}
           </td>
           <td className="px-6 py-4 text-sm text-slate-500 truncate max-w-xs">{node.description || '-'}</td>
@@ -137,7 +154,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
             {title}
             {isHierarchical && <FolderTree className="w-5 h-5 text-slate-400" />}
           </h2>
-          <p className="text-sm text-slate-500">Manage {title.toLowerCase()} codes and hierarchy.</p>
+          <p className="text-sm text-slate-500">{t.categoryManager.manage} {title.toLowerCase()} {t.categoryManager.descSuffix}</p>
         </div>
         <div className="flex space-x-3">
           <button 
@@ -145,14 +162,14 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
             className="flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 shadow-sm"
           >
             <Download className="w-4 h-4 mr-2" />
-            Template
+            {t.common.template}
           </button>
           <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add New
+            {t.common.add}
           </button>
         </div>
       </div>
@@ -161,12 +178,12 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div className="text-sm text-amber-800">
-                <strong>Administrative Boundaries Note (Effective 01/07/2025):</strong>
+                <strong>{t.categoryManager.adminNoteTitle}</strong>
                 <ul className="list-disc ml-4 mt-1 space-y-1">
-                    <li>Standard Structure: Province/City → District → Ward (3 Levels).</li>
-                    <li>New Structure: Province/City → Ward/Commune (2 Levels).</li>
+                    <li>{t.categoryManager.adminNote1}</li>
+                    <li>{t.categoryManager.adminNote2}</li>
                 </ul>
-                <p className="mt-1 text-xs opacity-80">Use the "Parent Unit" selector below to define whether a Ward belongs directly to a Province (2-level) or a District (3-level).</p>
+                <p className="mt-1 text-xs opacity-80">{t.categoryManager.adminNoteDesc}</p>
             </div>
         </div>
       )}
@@ -175,10 +192,10 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/4">Code</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/3">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Description</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/4">{t.common.code}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/3">{t.common.name}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.common.description}</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">{t.common.actions}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
@@ -190,7 +207,15 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
                                 {cat.code}
                             </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{cat.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                            {cat.name}
+                            {/* Visual indicator if this company has a custom Sync URL */}
+                            {type === 'COMPANY' && cat.appScriptUrl && (
+                                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800" title={t.categoryManager.synced}>
+                                    <Link className="w-3 h-3 mr-1" /> {t.categoryManager.synced}
+                                </span>
+                            )}
+                        </td>
                         <td className="px-6 py-4 text-sm text-slate-500 truncate max-w-xs">{cat.description || '-'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => handleEdit(cat)} className="text-blue-600 hover:text-blue-900 mr-4">
@@ -206,7 +231,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
               <tr>
                 <td colSpan={4} className="px-6 py-12 text-center text-slate-400">
                   <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                  <p>No records found.</p>
+                  <p>{t.common.noRecords}</p>
                 </td>
               </tr>
             )}
@@ -217,9 +242,9 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 m-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 m-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-slate-900">{editingId ? 'Edit' : 'Add'} {title}</h3>
+              <h3 className="text-lg font-bold text-slate-900">{editingId ? t.common.edit : t.common.add} {t.categoryManager.modalTitle}</h3>
               <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
@@ -229,13 +254,13 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
               
               {isHierarchical && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Parent {title} (Optional)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">{t.categoryManager.parent} (Optional)</label>
                     <select
                       value={formData.parentId || ''}
                       onChange={(e) => setFormData({...formData, parentId: e.target.value})}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="">-- No Parent (Root Level) --</option>
+                      <option value="">{t.categoryManager.noParent}</option>
                       {categories
                         .filter(c => c.id !== editingId) // Prevent self-parenting
                         .map(c => (
@@ -244,12 +269,12 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-slate-500 mt-1">Select a parent to nest this item (e.g., District inside Province).</p>
+                    <p className="text-xs text-slate-500 mt-1">{t.categoryManager.parentDesc}</p>
                   </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Code *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t.common.code} *</label>
                 <input
                   type="text"
                   value={formData.code}
@@ -261,7 +286,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Name *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t.common.name} *</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -272,7 +297,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t.common.description}</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -280,6 +305,41 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
                   rows={3}
                 />
               </div>
+
+               {/* Company Specific: Data Sync Configuration */}
+              {type === 'COMPANY' && (
+                  <div className="border-t border-slate-100 pt-4 mt-4 bg-slate-50 -mx-6 px-6 pb-4">
+                      <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                          <Link className="w-4 h-4 text-blue-600" /> {t.categoryManager.syncTitle}
+                      </h4>
+                      <p className="text-xs text-slate-500 mb-3">
+                          {t.categoryManager.syncDesc}
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">{t.categoryManager.endpoint}</label>
+                            <input
+                                type="url"
+                                value={formData.appScriptUrl || ''}
+                                onChange={(e) => setFormData({...formData, appScriptUrl: e.target.value})}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="https://script.google.com/macros/s/..."
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">{t.categoryManager.sheet}</label>
+                            <input
+                                type="url"
+                                value={formData.googleSheetUrl || ''}
+                                onChange={(e) => setFormData({...formData, googleSheetUrl: e.target.value})}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="https://docs.google.com/spreadsheets/d/..."
+                            />
+                        </div>
+                      </div>
+                  </div>
+              )}
 
               {error && <div className="text-red-500 text-sm">{error}</div>}
 
@@ -289,14 +349,14 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
                   onClick={handleCloseModal}
                   className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200"
                 >
-                  Cancel
+                  {t.common.cancel}
                 </button>
                 <button
                   type="submit"
                   className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  Save
+                  {t.common.save}
                 </button>
               </div>
             </form>

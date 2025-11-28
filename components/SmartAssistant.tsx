@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Bot, Sparkles, BrainCircuit } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
 import { ChatMessage } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface SmartAssistantProps {
   isOpen: boolean;
@@ -9,13 +11,19 @@ interface SmartAssistantProps {
 }
 
 export const SmartAssistant: React.FC<SmartAssistantProps> = ({ isOpen, onClose }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: '1', role: 'model', text: 'Hello! I am your HR AI Assistant. I can help you verify policies, draft emails, or analyze HR data. How can I help you today?' }
-  ]);
+  const { t } = useLanguage();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [useThinking, setUseThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Initialize welcome message when language loads/changes or if empty
+    if (messages.length === 0) {
+        setMessages([{ id: '1', role: 'model', text: t.assistant.welcome }]);
+    }
+  }, [t.assistant.welcome]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,7 +51,7 @@ export const SmartAssistant: React.FC<SmartAssistantProps> = ({ isOpen, onClose 
       };
       setMessages(prev => [...prev, aiMsg]);
     } catch (error) {
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: 'Sorry, I encountered an error.' }]);
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: t.assistant.error }]);
     } finally {
       setIsTyping(false);
     }
@@ -61,9 +69,9 @@ export const SmartAssistant: React.FC<SmartAssistantProps> = ({ isOpen, onClose 
             <div className="flex items-center text-white">
               <Bot className="w-6 h-6 mr-2" />
               <div>
-                <h2 className="text-lg font-bold">HR Assistant</h2>
+                <h2 className="text-lg font-bold">{t.assistant.title}</h2>
                 <p className="text-xs text-blue-100 flex items-center gap-1">
-                   Powered by Gemini 2.5 & 3 Pro
+                   {t.assistant.subtitle}
                 </p>
               </div>
             </div>
@@ -84,7 +92,7 @@ export const SmartAssistant: React.FC<SmartAssistantProps> = ({ isOpen, onClose 
                   {msg.isThinking && (
                       <div className="flex items-center gap-1 text-xs text-purple-600 mb-1 font-semibold">
                           <BrainCircuit className="w-3 h-3" />
-                          <span>Deep Reasoning Applied</span>
+                          <span>{t.assistant.reasoning}</span>
                       </div>
                   )}
                   <p className="whitespace-pre-wrap">{msg.text}</p>
@@ -118,7 +126,7 @@ export const SmartAssistant: React.FC<SmartAssistantProps> = ({ isOpen, onClose 
                     }`}
                  >
                      <Sparkles className="w-3 h-3" />
-                     {useThinking ? 'Deep Thinking On' : 'Deep Thinking Off'}
+                     {useThinking ? t.assistant.thinkingOn : t.assistant.thinkingOff}
                  </button>
                  <span className="text-xs text-gray-400">
                      {useThinking ? 'Using Gemini 3 Pro' : 'Using Gemini 2.5 Flash'}
@@ -130,7 +138,7 @@ export const SmartAssistant: React.FC<SmartAssistantProps> = ({ isOpen, onClose 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Ask about policy, analyze text..."
+                placeholder={t.assistant.placeholder}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button 

@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Employee, Category } from '../types';
 import { StorageService } from '../services/storageService';
@@ -106,7 +107,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onBa
                 <h1 className="text-3xl font-bold text-slate-900">{employee.lastName} {employee.firstName}</h1>
                 <div className="flex items-center gap-2 mt-2 text-slate-500">
                     <Briefcase className="w-4 h-4" />
-                    <span className="font-medium text-slate-700">{getCategoryName(employee.positionCode, 'POSITION')}</span>
+                    <span className="font-medium text-slate-700">{employee.jobTitle || getCategoryName(employee.positionCode, 'POSITION')}</span>
                     <span className="mx-1">•</span>
                     <span className="text-slate-600">{getCategoryName(employee.departmentCode, 'DEPARTMENT')}</span>
                 </div>
@@ -163,7 +164,8 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onBa
                           <div className="flex items-start text-sm font-medium text-slate-900">
                               <MapPin className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0 mt-0.5" />
                               <div className="flex-1">
-                                  <div>{employee.address || 'N/A'}</div>
+                                  {/* Use Computed Address if available, else new fields */}
+                                  <div>{employee.address || `${employee.addressDetail || ''}`}</div>
                                   
                                   {employee.address && (
                                     <div className="mt-2">
@@ -249,6 +251,14 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onBa
                                <span className="text-xs text-slate-400 ml-1">({employee.positionCode})</span>
                           </div>
                       </div>
+                      {employee.jobTitle && (
+                          <div>
+                              <label className="text-xs text-slate-500 block mb-1">Job Title</label>
+                              <div className="text-sm font-medium text-slate-900">
+                                  {employee.jobTitle}
+                              </div>
+                          </div>
+                      )}
                       <div>
                           <label className="text-xs text-slate-500 block mb-1">Location</label>
                           <div className="flex items-center text-sm font-medium text-slate-900">

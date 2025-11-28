@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { StorageService } from '../services/storageService';
-import { Employee, Category } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Users, TrendingUp, UserCheck, UserMinus } from 'lucide-react';
 
 interface DashboardProps {
@@ -11,6 +11,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ currentCompanyId }) => {
   const employees = StorageService.getEmployees(currentCompanyId);
   const departments = StorageService.getCategories('DEPARTMENT');
+  const { t } = useLanguage();
 
   // --- Statistics Calculation ---
   const stats = useMemo(() => {
@@ -73,7 +74,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentCompanyId }) => {
     let cumulativePercent = 0;
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
-    if (total === 0) return <div className="text-center text-gray-400 py-10">No data available</div>;
+    if (total === 0) return <div className="text-center text-gray-400 py-10">{t.dashboard.noData}</div>;
 
     return (
       <div className="flex items-center justify-center gap-8">
@@ -117,7 +118,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentCompanyId }) => {
 
   // --- Helper for Line Chart ---
   const LineChart = ({ data }: { data: { date: string; count: number }[] }) => {
-      if (data.length < 2) return <div className="text-center text-gray-400 py-10">Not enough data for timeline</div>;
+      if (data.length < 2) return <div className="text-center text-gray-400 py-10">{t.dashboard.noData}</div>;
 
       const maxCount = Math.max(...data.map(d => d.count)) * 1.1; // Add 10% padding
       const width = 500;
@@ -164,8 +165,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentCompanyId }) => {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-slate-900">HR Analytics Dashboard</h2>
-        <p className="text-slate-500">Overview of workforce metrics and trends.</p>
+        <h2 className="text-2xl font-bold text-slate-900">{t.dashboard.title}</h2>
+        <p className="text-slate-500">{t.dashboard.subtitle}</p>
       </div>
 
       {/* Stats Cards */}
@@ -173,7 +174,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentCompanyId }) => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-slate-500">Total Employees</p>
+                    <p className="text-sm font-medium text-slate-500">{t.dashboard.totalEmployees}</p>
                     <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-lg text-blue-600"><Users className="w-6 h-6"/></div>
@@ -182,7 +183,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentCompanyId }) => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
              <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-slate-500">Active</p>
+                    <p className="text-sm font-medium text-slate-500">{t.dashboard.active}</p>
                     <p className="text-2xl font-bold text-green-600">{stats.active}</p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-lg text-green-600"><UserCheck className="w-6 h-6"/></div>
@@ -191,7 +192,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentCompanyId }) => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
              <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-slate-500">On Leave</p>
+                    <p className="text-sm font-medium text-slate-500">{t.dashboard.onLeave}</p>
                     <p className="text-2xl font-bold text-amber-600">{stats.onLeave}</p>
                 </div>
                 <div className="p-3 bg-amber-100 rounded-lg text-amber-600"><TrendingUp className="w-6 h-6"/></div>
@@ -200,7 +201,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentCompanyId }) => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
              <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-slate-500">Terminated</p>
+                    <p className="text-sm font-medium text-slate-500">{t.dashboard.terminated}</p>
                     <p className="text-2xl font-bold text-slate-400">{stats.terminated}</p>
                 </div>
                 <div className="p-3 bg-slate-100 rounded-lg text-slate-500"><UserMinus className="w-6 h-6"/></div>
@@ -212,15 +213,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentCompanyId }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Pie Chart */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-              <h3 className="text-lg font-bold text-slate-800 mb-6">Department Distribution</h3>
+              <h3 className="text-lg font-bold text-slate-800 mb-6">{t.dashboard.deptDist}</h3>
               <PieChart data={deptData} />
           </div>
 
           {/* Line Chart */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-               <h3 className="text-lg font-bold text-slate-800 mb-6">Employee Growth (Last 6 Months)</h3>
+               <h3 className="text-lg font-bold text-slate-800 mb-6">{t.dashboard.growth}</h3>
                <LineChart data={growthData} />
-               <p className="text-xs text-center text-slate-400 mt-4">Cumulative Count by Start Date</p>
+               <p className="text-xs text-center text-slate-400 mt-4">{t.dashboard.growthSub}</p>
           </div>
       </div>
     </div>

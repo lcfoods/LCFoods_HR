@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { StorageService } from '../services/storageService';
 import { Employee, Category } from '../types';
-import { Search, Filter, ArrowUpDown, ArrowUp, ArrowDown, UserPlus, Mail, Phone, Calendar, Building2, Briefcase } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { Search, Filter, ArrowUpDown, ArrowUp, ArrowDown, UserPlus, Mail, Phone, Calendar, Building2, Briefcase, Edit2, Trash2 } from 'lucide-react';
 
 interface EmployeeListProps {
   currentCompanyId: string;
   onAddNew: () => void;
   onSelectEmployee: (id: string) => void;
+  onEditEmployee: (id: string) => void;
 }
 
 type SortKey = keyof Employee;
 
-export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, onAddNew, onSelectEmployee }) => {
+export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, onAddNew, onSelectEmployee, onEditEmployee }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Category[]>([]);
   const [positions, setPositions] = useState<Category[]>([]);
+  const { t } = useLanguage();
 
   // Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,6 +38,23 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, on
     setEmployees(StorageService.getEmployees(currentCompanyId));
     setDepartments(StorageService.getCategories('DEPARTMENT'));
     setPositions(StorageService.getCategories('POSITION'));
+  };
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (window.confirm(t.common.confirmDelete)) {
+          const result = StorageService.deleteEmployee(id);
+          if (result.success) {
+              loadData();
+          } else {
+              alert(result.error);
+          }
+      }
+  };
+
+  const handleEdit = (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      onEditEmployee(id);
   };
 
   const getDeptName = (code: string) => departments.find(d => d.code === code)?.name || code;
@@ -87,15 +107,15 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, on
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Employee Directory</h2>
-          <p className="text-sm text-slate-500">View, search, and manage employee records.</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t.employeeList.title}</h2>
+          <p className="text-sm text-slate-500">{t.employeeList.subtitle}</p>
         </div>
         <button 
           onClick={onAddNew}
           className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-colors"
         >
           <UserPlus className="w-4 h-4 mr-2" />
-          Add New Employee
+          {t.common.add}
         </button>
       </div>
 
@@ -105,7 +125,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, on
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
             <input 
                 type="text" 
-                placeholder="Search by name or email..." 
+                placeholder={t.employeeList.searchPlaceholder} 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -120,7 +140,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, on
                     onChange={(e) => setDeptFilter(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none appearance-none"
                 >
-                    <option value="">All Departments</option>
+                    <option value="">{t.employeeList.allDepartments}</option>
                     {departments.map(d => <option key={d.id} value={d.code}>{d.name}</option>)}
                 </select>
             </div>
@@ -131,7 +151,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, on
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none appearance-none"
                 >
-                    <option value="">All Status</option>
+                    <option value="">{t.employeeList.allStatus}</option>
                     <option value="Active">Active</option>
                     <option value="OnLeave">On Leave</option>
                     <option value="Terminated">Terminated</option>
@@ -147,19 +167,22 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, on
             <thead className="bg-slate-50">
                 <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('lastName')}>
-                        <div className="flex items-center">Name <SortIcon columnKey="lastName" /></div>
+                        <div className="flex items-center">{t.employeeList.cols.name} <SortIcon columnKey="lastName" /></div>
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('departmentCode')}>
-                         <div className="flex items-center">Role & Dept <SortIcon columnKey="departmentCode" /></div>
+                         <div className="flex items-center">{t.employeeList.cols.roleDept} <SortIcon columnKey="departmentCode" /></div>
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                         Contact
+                         {t.employeeList.cols.contact}
                     </th>
                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('startDate')}>
-                         <div className="flex items-center">Start Date <SortIcon columnKey="startDate" /></div>
+                         <div className="flex items-center">{t.employeeList.cols.startDate} <SortIcon columnKey="startDate" /></div>
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('status')}>
-                         <div className="flex items-center">Status <SortIcon columnKey="status" /></div>
+                         <div className="flex items-center">{t.employeeList.cols.status} <SortIcon columnKey="status" /></div>
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        {t.common.actions}
                     </th>
                 </tr>
             </thead>
@@ -168,7 +191,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, on
                     filteredAndSortedEmployees.map((emp) => (
                     <tr 
                         key={emp.id} 
-                        className="hover:bg-slate-50 transition-colors cursor-pointer"
+                        className="hover:bg-slate-50 transition-colors cursor-pointer group"
                         onClick={() => onSelectEmployee(emp.id)}
                     >
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -223,12 +246,30 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, on
                                 {emp.status}
                             </span>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end space-x-2">
+                                <button 
+                                    onClick={(e) => handleEdit(emp.id, e)}
+                                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                                    title={t.common.edit}
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button 
+                                    onClick={(e) => handleDelete(emp.id, e)}
+                                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                    title={t.common.delete}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     ))
                 ) : (
                     <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                            No employees found matching your filters.
+                        <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                            {t.employeeList.noResults}
                         </td>
                     </tr>
                 )}
@@ -236,8 +277,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ currentCompanyId, on
             </table>
         </div>
         <div className="bg-slate-50 px-6 py-3 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center">
-            <span>Showing {filteredAndSortedEmployees.length} record(s)</span>
-            {filteredAndSortedEmployees.length > 0 && <span>Sorted by {String(sortConfig.key)} ({sortConfig.direction})</span>}
+            <span>{t.employeeList.showing} {filteredAndSortedEmployees.length} {t.employeeList.records}</span>
+            {filteredAndSortedEmployees.length > 0 && <span>{t.employeeList.sortedBy} {String(sortConfig.key)} ({sortConfig.direction})</span>}
         </div>
       </div>
     </div>

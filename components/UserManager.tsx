@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { StorageService } from '../services/storageService';
 import { User, UserRole } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Shield, Plus, Trash2, Edit2, Save, X, Key } from 'lucide-react';
 
 export const UserManager = () => {
@@ -9,6 +10,7 @@ export const UserManager = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [error, setError] = useState('');
+    const { t } = useLanguage();
 
     const initialFormState = {
         name: '',
@@ -30,7 +32,7 @@ export const UserManager = () => {
         setFormData({
             name: user.name,
             email: user.email,
-            password: '', // Don't show existing password
+            password: '', 
             role: user.role
         });
         setEditingId(user.id);
@@ -38,7 +40,7 @@ export const UserManager = () => {
     };
 
     const handleDelete = (id: string) => {
-        if (window.confirm('Are you sure you want to delete this user?')) {
+        if (window.confirm(t.userManager.confirmDelete)) {
             const result = StorageService.deleteUser(id);
             if (result.success) loadUsers();
             else alert(result.error);
@@ -50,7 +52,7 @@ export const UserManager = () => {
         setError('');
 
         if (!formData.name || !formData.email) {
-            setError('Name and Email are required.');
+            setError(t.userManager.reqFields);
             return;
         }
 
@@ -59,7 +61,7 @@ export const UserManager = () => {
             name: formData.name,
             email: formData.email,
             role: formData.role,
-            password: formData.password || undefined // Only update if provided
+            password: formData.password || undefined 
         };
 
         const result = StorageService.saveUser(userToSave);
@@ -67,7 +69,7 @@ export const UserManager = () => {
             loadUsers();
             handleCloseModal();
         } else {
-            setError(result.error || 'Failed to save');
+            setError(result.error || t.common.error);
         }
     };
 
@@ -84,16 +86,16 @@ export const UserManager = () => {
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                         <Shield className="w-6 h-6 text-blue-600" />
-                        User Management
+                        {t.userManager.title}
                     </h2>
-                    <p className="text-sm text-slate-500">Manage system access and roles.</p>
+                    <p className="text-sm text-slate-500">{t.userManager.subtitle}</p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm"
                 >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add User
+                    {t.common.add}
                 </button>
             </div>
 
@@ -101,10 +103,10 @@ export const UserManager = () => {
                 <table className="min-w-full divide-y divide-slate-200">
                     <thead className="bg-slate-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Role</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Email</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.employeeList.cols.name}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.employeeList.cols.roleDept}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.auth.email}</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">{t.common.actions}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
@@ -142,14 +144,14 @@ export const UserManager = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-bold text-slate-900">{editingId ? 'Edit User' : 'New User'}</h3>
+                            <h3 className="text-lg font-bold text-slate-900">{editingId ? t.common.edit : t.common.add} {t.userManager.title}</h3>
                             <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-600">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t.employeeList.cols.name}</label>
                                 <input
                                     type="text"
                                     required
@@ -159,7 +161,7 @@ export const UserManager = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t.auth.email}</label>
                                 <input
                                     type="email"
                                     required
@@ -171,33 +173,33 @@ export const UserManager = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
-                                    <Key className="w-3 h-3" /> Password
+                                    <Key className="w-3 h-3" /> {t.auth.password}
                                 </label>
                                 <input
                                     type="password"
                                     required={!editingId}
-                                    placeholder={editingId ? 'Leave blank to keep current' : ''}
+                                    placeholder={editingId ? t.userManager.passwordPlace : ''}
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t.employeeList.cols.roleDept}</label>
                                 <select
                                     value={formData.role}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                                     className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                                 >
-                                    <option value={UserRole.STAFF}>Staff (Data Entry)</option>
-                                    <option value={UserRole.ADMIN}>Admin (Full Access)</option>
+                                    <option value={UserRole.STAFF}>{t.userManager.roleStaff}</option>
+                                    <option value={UserRole.ADMIN}>{t.userManager.roleAdmin}</option>
                                 </select>
                             </div>
                             {error && <div className="text-red-500 text-sm">{error}</div>}
                             <div className="flex justify-end space-x-3 mt-6">
-                                <button type="button" onClick={handleCloseModal} className="px-4 py-2 text-sm text-slate-700 bg-slate-100 rounded-lg">Cancel</button>
+                                <button type="button" onClick={handleCloseModal} className="px-4 py-2 text-sm text-slate-700 bg-slate-100 rounded-lg">{t.common.cancel}</button>
                                 <button type="submit" className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                                    <Save className="w-4 h-4 mr-2" /> Save
+                                    <Save className="w-4 h-4 mr-2" /> {t.common.save}
                                 </button>
                             </div>
                         </form>
