@@ -1,0 +1,9 @@
+{
+  "name": "HR Master Pro",
+  "description": "Professional HR Management System for employee data entry, category management, and AI-powered HR assistance.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "geolocation"
+  ]
+}
