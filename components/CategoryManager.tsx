@@ -16,7 +16,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
   const [editingId, setEditingId] = useState<string | null>(null);
   const { t } = useLanguage();
   
-  // Form State
   const [formData, setFormData] = useState<Partial<Category>>({
     code: '',
     name: '',
@@ -92,7 +91,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
     setError('');
   };
 
-  // --- Recursive Tree Rendering ---
   const renderTree = (parentId: string | null = null, level = 0) => {
     const nodes = categories.filter(c => c.parentId === parentId);
     
@@ -123,7 +121,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
              {type === 'ADMIN_UNIT' && level === 1 && (
                  <span className="ml-2 text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-normal">Quận/Huyện</span>
             )}
-            {/* Visual indicator if this company has a custom Sync URL */}
             {type === 'COMPANY' && node.appScriptUrl && (
                 <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800" title={t.categoryManager.synced}>
                     <Link className="w-3 h-3 mr-1" /> {t.categoryManager.synced}
@@ -131,7 +128,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
             )}
           </td>
           <td className="px-6 py-4 text-sm text-slate-500 truncate max-w-xs">{node.description || '-'}</td>
-          {/* REMOVED opacity-0 class here so buttons are always visible */}
           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
             <div className="flex justify-end gap-3">
                 <button onClick={() => handleEdit(node)} className="text-blue-600 hover:text-blue-900" title={t.common.edit}>
@@ -211,7 +207,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                             {cat.name}
-                            {/* Visual indicator if this company has a custom Sync URL */}
                             {type === 'COMPANY' && cat.appScriptUrl && (
                                 <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800" title={t.categoryManager.synced}>
                                     <Link className="w-3 h-3 mr-1" /> {t.categoryManager.synced}
@@ -243,7 +238,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
         </table>
       </div>
 
-      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 m-4 max-h-[90vh] overflow-y-auto">
@@ -264,9 +258,9 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
                       onChange={(e) => setFormData({...formData, parentId: e.target.value})}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="">{t.categoryManager.noParent}</option>
+                      <option value="">{type === 'ADMIN_UNIT' ? t.categoryManager.noParentAdmin : t.categoryManager.noParent}</option>
                       {categories
-                        .filter(c => c.id !== editingId) // Prevent self-parenting
+                        .filter(c => c.id !== editingId) 
                         .map(c => (
                         <option key={c.id} value={c.id}>
                            {c.code} - {c.name}
@@ -310,7 +304,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ type, title, i
                 />
               </div>
 
-               {/* Company Specific: Data Sync Configuration */}
               {type === 'COMPANY' && (
                   <div className="border-t border-slate-100 pt-4 mt-4 bg-slate-50 -mx-6 px-6 pb-4">
                       <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
