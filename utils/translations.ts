@@ -1,4 +1,3 @@
-
 export type Language = 'en' | 'vn';
 
 export const translations = {
@@ -137,7 +136,8 @@ export const translations = {
       synced: "Synced",
       modalTitle: "Category",
       parent: "Parent Unit",
-      noParent: "-- No Parent (Province/City Level) --",
+      noParent: "-- No Parent (Root Level) --",
+      noParentAdmin: "-- No Parent (Province/City) --",
       parentDesc: "Select a parent to nest this item.",
       syncTitle: "Data Synchronization",
       syncDesc: "Configure where employee data for this company should be saved. If left blank, it will use the Global Configuration.",
@@ -328,7 +328,8 @@ export const translations = {
       synced: "Đã đồng bộ",
       modalTitle: "Danh mục",
       parent: "Đơn vị cấp trên",
-      noParent: "-- Không (Cấp Tỉnh/Thành) --",
+      noParent: "-- Không (Cấp cao nhất) --",
+      noParentAdmin: "-- Không (Tỉnh/Thành phố) --",
       parentDesc: "Chọn cấp cha cho mục này.",
       syncTitle: "Cấu hình đồng bộ dữ liệu",
       syncDesc: "Cấu hình nơi lưu trữ dữ liệu nhân viên cho công ty này. Nếu để trống sẽ dùng cấu hình mặc định của hệ thống.",
