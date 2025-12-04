@@ -7,7 +7,7 @@ import { CategoryManager } from './components/CategoryManager';
 import { SmartAssistant } from './components/SmartAssistant';
 import { Settings } from './components/Settings';
 import { UserManager } from './components/UserManager';
-import { RoleManager } from './components/RoleManager'; // Import
+import { RoleManager } from './components/RoleManager';           
 import { Dashboard } from './components/Dashboard';
 import { User, Category, PermissionKey } from './types';
 import { StorageService } from './services/storageService';
