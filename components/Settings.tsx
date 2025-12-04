@@ -7,7 +7,7 @@ import { Save, ExternalLink, Settings as SettingsIcon, CheckCircle, Building, Li
 export const Settings = () => {
   const [formData, setFormData] = useState<SystemSettings>({
     googleSheetUrl: '',
-    appScriptUrl: '',
+    appScriptUrl: '',          
     exportColumns: []
   });
   const [companies, setCompanies] = useState<Category[]>([]);
