@@ -6,16 +6,43 @@
     <title>HR Master Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script>
+      // Polyfill for process in browser environments to prevent "process is not defined" errors
+      if (typeof process === 'undefined') {
+        window.process = { env: {} };
+      }
+
+      // Polyfill for crypto.randomUUID in insecure contexts
+      if (typeof window !== 'undefined') {
+        if (!window.crypto) {
+          try {
+            Object.defineProperty(window, 'crypto', {
+              value: {},
+              writable: true
+            });
+          } catch (e) { console.warn("Could not polyfill window.crypto"); }
+        }
+        
+        if (window.crypto && !window.crypto.randomUUID) {
+          window.crypto.randomUUID = () => {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+              var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+            });
+          };
+        }
+      }
+    </script>
     <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "react-dom": "https://esm.sh/react-dom@18.2.0",
-    "lucide-react": "https://esm.sh/lucide-react@0.263.1",
+    "react": "https://esm.sh/react@18.2.0?dev",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?dev",
+    "react-dom": "https://esm.sh/react-dom@18.2.0?dev",
+    "lucide-react": "https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0",
     "@google/genai": "https://esm.sh/@google/genai@0.1.1",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/"
   }
 }
 </script>
