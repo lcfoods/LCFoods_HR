@@ -8,7 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 interface SmartAssistantProps {
   isOpen: boolean;
   onClose: () => void;
-}
+}      
 
 export const SmartAssistant: React.FC<SmartAssistantProps> = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
