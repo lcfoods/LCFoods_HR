@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { StorageService } from '../services/storageService';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Users, TrendingUp, UserCheck, UserMinus } from 'lucide-react';
-
+     
 interface DashboardProps {
   currentCompanyId: string;
 }
