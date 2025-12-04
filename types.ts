@@ -2,7 +2,7 @@
 export enum UserRole {
   ADMIN = 'ADMIN', // Legacy
   STAFF = 'STAFF'
-}
+}    
 
 export type PermissionKey = 
   // Dashboard
