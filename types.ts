@@ -1,15 +1,48 @@
 
 export enum UserRole {
-  ADMIN = 'ADMIN',
+  ADMIN = 'ADMIN', // Legacy
   STAFF = 'STAFF'
 }
 
+export type PermissionKey = 
+  // Dashboard
+  | 'DASHBOARD'
+  
+  // Employee
+  | 'EMPLOYEE_VIEW'
+  | 'EMPLOYEE_CREATE'
+  | 'EMPLOYEE_EDIT'
+  | 'EMPLOYEE_DELETE'
+  
+  // Categories (General or Specific)
+  | 'CATEGORY_VIEW'
+  | 'CATEGORY_CREATE'
+  | 'CATEGORY_EDIT'
+  | 'CATEGORY_DELETE'
+  
+  // System
+  | 'SYSTEM_SETTINGS'
+  | 'SYSTEM_USERS_VIEW'
+  | 'SYSTEM_USERS_MANAGE' // Create/Edit/Delete
+  | 'SYSTEM_ROLES_VIEW'
+  | 'SYSTEM_ROLES_MANAGE'; // Create/Edit/Delete
+
+export interface Role {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  permissions: PermissionKey[];
+  isSystem?: boolean; 
+}
+
 export interface User {
-  id: string; // Added ID for management
+  id: string; 
   email: string;
   name: string;
-  role: UserRole;
-  password?: string; // Optional for session user, required for stored user
+  role: UserRole; 
+  roleId?: string; 
+  password?: string;
   avatar?: string;
   companyId?: string;
 }
@@ -20,7 +53,9 @@ export interface Category {
   name: string;
   description?: string;
   type: 'DEPARTMENT' | 'POSITION' | 'LOCATION' | 'ADMIN_UNIT' | 'COMPANY';
-  parentId?: string | null; // For hierarchical data (Departments, Admin Units)
+  parentId?: string | null; 
+  level?: number; // New Field: Cấp bậc (1: Khối, 2: Phòng, 3: Đội/Nhóm...)
+  status?: 'Active' | 'Dissolved'; // New Field: Trạng thái hoạt động
   appScriptUrl?: string;
   googleSheetUrl?: string;
 }
@@ -28,25 +63,27 @@ export interface Category {
 export interface SystemSettings {
   googleSheetUrl: string;
   appScriptUrl: string;
+  exportColumns?: string[]; // List of keys to export to Excel
 }
 
 export interface Employee {
   id: string;
+  employeeCode: string; // Mã nhân viên
+  identityCard?: string; // CCCD/CMND
+  identityIssueDate?: string; // New Field: Ngày cấp
+  identityPlace?: string; // New Field: Nơi cấp
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   dob: string;
   gender: 'Male' | 'Female' | 'Other';
-  
-  // New Address Fields
-  addressDetail: string; // Số nhà, đường
-  provinceCode: string;  // Mã Tỉnh/Thành
-  districtCode: string;  // Mã Quận/Huyện (Optional nếu là cơ chế mới)
-  wardCode: string;      // Mã Phường/Xã
-  isNewAdminSystem: boolean; // True = 2 cấp, False = 3 cấp
-  address?: string; // Computed full address for display/legacy
-
+  addressDetail: string; 
+  provinceCode: string;  
+  districtCode: string;  
+  wardCode: string;      
+  isNewAdminSystem: boolean; 
+  address?: string; 
   jobTitle?: string;
   departmentCode: string;
   positionCode: string;

@@ -1,5 +1,5 @@
 {
-  "name": "HR Master Pro",
+  "name": "Thông Tin Nhân Sự",
   "description": "Professional HR Management System for employee data entry, category management, and AI-powered HR assistance.",
   "requestFramePermissions": [
     "microphone",

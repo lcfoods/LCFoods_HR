@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Layout } from './components/Layout';
 import { EmployeeForm } from './components/EmployeeForm';
 import { EmployeeList } from './components/EmployeeList';
@@ -7,10 +7,11 @@ import { CategoryManager } from './components/CategoryManager';
 import { SmartAssistant } from './components/SmartAssistant';
 import { Settings } from './components/Settings';
 import { UserManager } from './components/UserManager';
+import { RoleManager } from './components/RoleManager'; // Import
 import { Dashboard } from './components/Dashboard';
-import { User, UserRole, Category } from './types';
+import { User, Category, PermissionKey } from './types';
 import { StorageService } from './services/storageService';
-import { Building, AlertCircle, Briefcase } from 'lucide-react';
+import { Building, AlertCircle, Briefcase, Lock } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 
 function AppContent() {
@@ -19,36 +20,27 @@ function AppContent() {
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const { t } = useLanguage();
   
-  // Login State
   const [loginError, setLoginError] = useState('');
   const [loginCompanyId, setLoginCompanyId] = useState<string>('');
 
-  // Multi-Company State
   const [companies, setCompanies] = useState<Category[]>([]);
   const [currentCompanyId, setCurrentCompanyId] = useState<string>('');
 
-  // Selected Employee for Details View
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
-  
-  // Editing Employee State
   const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null);
 
-  // Load companies on mount (Available for both Login and App)
   useEffect(() => {
     const loadedCompanies = StorageService.getCategories('COMPANY');
     setCompanies(loadedCompanies);
-    
-    // Default login selection
     if (loadedCompanies.length > 0 && !loginCompanyId) {
         setLoginCompanyId(loadedCompanies[0].id);
     }
   }, []);
 
-  // Update App context when User changes
   useEffect(() => {
     if (user && companies.length > 0) {
         if (!currentCompanyId) {
-             if (user.role === UserRole.STAFF && user.companyId) {
+             if (user.companyId) {
                  setCurrentCompanyId(user.companyId);
              } else {
                  setCurrentCompanyId(companies[0].id);
@@ -57,6 +49,15 @@ function AppContent() {
     }
   }, [user]); 
 
+  // --- PERMISSION CHECK HELPER ---
+  const userPermissions = useMemo(() => {
+      if (!user?.roleId) return [];
+      const role = StorageService.getRoleById(user.roleId);
+      return role ? role.permissions : [];
+  }, [user]);
+
+  const hasPermission = (key: PermissionKey) => userPermissions.includes(key);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
@@ -64,38 +65,21 @@ function AppContent() {
     const email = (form.elements.namedItem('email') as HTMLInputElement).value;
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
     
-    // 1. Authenticate Credentials
     const authenticatedUser = StorageService.authenticate(email, password);
 
     if (authenticatedUser) {
-        // 2. Validate Company Access
-        if (authenticatedUser.role !== UserRole.ADMIN && authenticatedUser.companyId !== loginCompanyId) {
+        // Validate Company Access
+        if (authenticatedUser.companyId && authenticatedUser.companyId !== loginCompanyId) {
             setLoginError(t.auth.noAccess);
             return;
         }
 
-        // 3. Success
         setUser(authenticatedUser);
-        setCurrentCompanyId(loginCompanyId); // Set the session context to the selected company
+        setCurrentCompanyId(loginCompanyId); 
         setCurrentPage('dashboard');
     } else {
         setLoginError(t.auth.invalid);
     }
-  };
-
-  const handleSelectEmployee = (id: string) => {
-    setSelectedEmployeeId(id);
-    setCurrentPage('employee-detail');
-  };
-
-  const handleEditEmployee = (id: string) => {
-      setEditingEmployeeId(id);
-      setCurrentPage('employees');
-  };
-
-  const handleAddNewEmployee = () => {
-      setEditingEmployeeId(null);
-      setCurrentPage('employees');
   };
 
   const renderContent = () => {
@@ -103,20 +87,40 @@ function AppContent() {
         return <div className="p-8 text-center text-slate-500">{t.common.loading}</div>;
     }
 
+    const AccessDenied = () => (
+        <div className="flex flex-col items-center justify-center h-96 text-slate-400">
+            <Lock className="w-16 h-16 mb-4 opacity-20" />
+            <h3 className="text-lg font-bold text-slate-600">Access Denied</h3>
+            <p>You do not have permission to view this page.</p>
+        </div>
+    );
+
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard currentCompanyId={currentCompanyId} />;
+        return hasPermission('DASHBOARD') ? <Dashboard currentCompanyId={currentCompanyId} /> : <AccessDenied />;
+      
       case 'employee-list':
-        return (
+        return hasPermission('EMPLOYEE_VIEW') ? ( // Changed to EMPLOYEE_VIEW
           <EmployeeList 
             currentCompanyId={currentCompanyId} 
-            onAddNew={handleAddNewEmployee} 
-            onSelectEmployee={handleSelectEmployee}
-            onEditEmployee={handleEditEmployee}
+            onAddNew={() => {
+                setEditingEmployeeId(null);
+                setCurrentPage('employees');
+            }} 
+            onSelectEmployee={(id) => {
+                setSelectedEmployeeId(id);
+                setCurrentPage('employee-detail');
+            }}
+            onEditEmployee={(id) => {
+                setEditingEmployeeId(id);
+                setCurrentPage('employees');
+            }}
+            user={user!} // Pass user
           />
-        );
+        ) : <AccessDenied />;
+      
       case 'employee-detail':
-        return (
+        return hasPermission('EMPLOYEE_VIEW') ? (
             <EmployeeDetail 
                 employeeId={selectedEmployeeId || ''} 
                 onBack={() => {
@@ -124,9 +128,11 @@ function AppContent() {
                     setCurrentPage('employee-list');
                 }} 
             />
-        );
+        ) : <AccessDenied />;
+      
       case 'employees':
-        return (
+        // Check create or edit based on context, simplify to CREATE for now or separate
+        return hasPermission('EMPLOYEE_CREATE') || hasPermission('EMPLOYEE_EDIT') ? (
             <EmployeeForm 
                 currentCompanyId={currentCompanyId} 
                 editingEmployeeId={editingEmployeeId}
@@ -139,23 +145,36 @@ function AppContent() {
                     setCurrentPage('employee-list');
                 }}
             />
-        );
+        ) : <AccessDenied />;
+      
       case 'companies':
-         return user?.role === UserRole.ADMIN 
-          ? <CategoryManager type="COMPANY" title={t.sidebar.companies} /> 
-          : <div className="text-center py-10 text-red-500">Access Denied</div>;
+         return hasPermission('CATEGORY_VIEW') 
+          ? <CategoryManager type="COMPANY" title={t.sidebar.companies} user={user!} /> 
+          : <AccessDenied />;
       case 'departments':
-        return <CategoryManager type="DEPARTMENT" title={t.sidebar.departments} isHierarchical={true} />;
+        return hasPermission('CATEGORY_VIEW') 
+          ? <CategoryManager type="DEPARTMENT" title={t.sidebar.departments} isHierarchical={true} user={user!} />
+          : <AccessDenied />;
       case 'positions':
-        return <CategoryManager type="POSITION" title={t.sidebar.positions} />;
+        return hasPermission('CATEGORY_VIEW') 
+          ? <CategoryManager type="POSITION" title={t.sidebar.positions} user={user!} />
+          : <AccessDenied />;
       case 'locations':
-        return <CategoryManager type="LOCATION" title={t.sidebar.locations} />;
+        return hasPermission('CATEGORY_VIEW') 
+          ? <CategoryManager type="LOCATION" title={t.sidebar.locations} user={user!} />
+          : <AccessDenied />;
       case 'admin-units':
-        return <CategoryManager type="ADMIN_UNIT" title={t.sidebar.adminUnits} isHierarchical={true} />;
+        return hasPermission('CATEGORY_VIEW') 
+          ? <CategoryManager type="ADMIN_UNIT" title={t.sidebar.adminUnits} isHierarchical={true} user={user!} />
+          : <AccessDenied />;
+      
       case 'settings':
-        return <Settings />;
+        return hasPermission('SYSTEM_SETTINGS') ? <Settings /> : <AccessDenied />;
       case 'users':
-        return user?.role === UserRole.ADMIN ? <UserManager /> : <div className="text-center py-10 text-red-500">Access Denied</div>;
+        return hasPermission('SYSTEM_USERS_VIEW') ? <UserManager currentUser={user!} /> : <AccessDenied />;
+      case 'roles':
+        return hasPermission('SYSTEM_ROLES_VIEW') ? <RoleManager /> : <AccessDenied />;
+      
       default:
         return <Dashboard currentCompanyId={currentCompanyId} />;
     }
@@ -169,7 +188,7 @@ function AppContent() {
             <Building className="w-12 h-12" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
-            LCFoods Group
+            Thông Tin Nhân Sự
           </h2>
           <p className="mt-2 text-center text-sm text-slate-600">
             {t.auth.title}
@@ -180,7 +199,6 @@ function AppContent() {
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <form className="space-y-6" onSubmit={handleLogin}>
               
-              {/* Company Selection */}
               <div>
                 <label htmlFor="company" className="block text-sm font-medium text-slate-700">
                   {t.auth.selectCompany}
@@ -253,20 +271,6 @@ function AppContent() {
                 </button>
               </div>
             </form>
-            <div className="mt-6">
-               <div className="relative">
-                 <div className="absolute inset-0 flex items-center">
-                   <div className="w-full border-t border-slate-300" />
-                 </div>
-                 <div className="relative flex justify-center text-sm">
-                   <span className="px-2 bg-white text-slate-500">{t.auth.demo}</span>
-                 </div>
-               </div>
-               <div className="mt-2 grid grid-cols-1 gap-2 text-center text-xs text-slate-400">
-                  <p>Admin: admin@lcfoods.com / password</p>
-                  <p>Staff: staff@lcfoods.com / password</p>
-               </div>
-            </div>
           </div>
         </div>
       </div>
