@@ -4,21 +4,68 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HR Master Pro</title>
+
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0"
-  }
-}
-</script>
-</head>
-  <body>
+
+    <!-- Import map cho React -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "react": "https://aistudiocdn.com/react@^19.2.0"
+      }
+    }
+    </script>
+  </head>
+  <body class="bg-slate-100">
     <div id="root"></div>
+
+    <!-- React app -->
+    <script type="module">
+      import React from "react";
+      import { createRoot } from "react-dom/client";
+
+      // Component đơn giản để test
+      const App = () =>
+        React.createElement(
+          "div",
+          { className: "min-h-screen flex items-center justify-center" },
+          React.createElement(
+            "div",
+            "className",
+            null
+          ),
+          React.createElement(
+            "div",
+            { className: "bg-white shadow-lg rounded-xl p-8 max-w-xl w-full" },
+            React.createElement(
+              "h1",
+              { className: "text-2xl font-bold mb-2 text-sky-700" },
+              "HR Master Pro"
+            ),
+            React.createElement(
+              "p",
+              { className: "text-slate-600 mb-4" },
+              "Xin chào! Đây là màn hình test, chứng tỏ React đã chạy ok."
+            ),
+            React.createElement(
+              "button",
+              { className: "px-4 py-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700" },
+              "Nhấn vào đây cũng chưa làm gì đâu 😄"
+            )
+          )
+        );
+
+      const container = document.getElementById("root");
+      const root = createRoot(container);
+      root.render(React.createElement(App));
+    </script>
   </body>
 </html>
