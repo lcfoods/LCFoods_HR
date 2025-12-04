@@ -1,4 +1,5 @@
 
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Employee, Category } from '../types';
 import { StorageService } from '../services/storageService';
@@ -18,7 +19,10 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle,
+  CreditCard,
+  Stamp
 } from 'lucide-react';
 
 interface EmployeeDetailProps {
@@ -28,7 +32,7 @@ interface EmployeeDetailProps {
 
 export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onBack }) => {
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; details: string; mapLink?: string } | null>(null);
+  const [verificationResult, setVerificationResult] = useState<{ status: 'valid' | 'partial' | 'invalid'; details: string; mapLink?: string } | null>(null);
 
   const employee = useMemo(() => {
     // Search across all companies/storage to find the ID
@@ -62,7 +66,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onBa
         const result = await GeminiService.verifyAddress(employee.address);
         setVerificationResult(result);
     } catch (e) {
-        setVerificationResult({ isValid: false, details: "Verification failed due to an error." });
+        setVerificationResult({ status: 'invalid', details: "Verification failed due to an error." });
     } finally {
         setIsVerifying(false);
     }
@@ -144,6 +148,36 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onBa
                               {employee.phone || 'N/A'}
                           </div>
                       </div>
+                      
+                      {employee.identityCard && (
+                          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                              <div className="mb-2">
+                                  <label className="text-xs text-slate-500 block mb-0.5">ID Card</label>
+                                  <div className="flex items-center text-sm font-bold text-slate-800">
+                                      <CreditCard className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+                                      <span className="font-mono tracking-wide">{employee.identityCard}</span>
+                                  </div>
+                              </div>
+                              {employee.identityIssueDate && (
+                                  <div className="mb-2">
+                                     <label className="text-[10px] text-slate-400 block mb-0.5">Issued</label>
+                                     <div className="text-xs font-medium text-slate-700">
+                                        {new Date(employee.identityIssueDate).toLocaleDateString()}
+                                     </div>
+                                  </div>
+                              )}
+                              {employee.identityPlace && (
+                                  <div>
+                                     <label className="text-[10px] text-slate-400 block mb-0.5">Place</label>
+                                     <div className="text-xs font-medium text-slate-700 leading-tight">
+                                        <Stamp className="w-3 h-3 inline mr-1 opacity-50"/> 
+                                        {employee.identityPlace}
+                                     </div>
+                                  </div>
+                              )}
+                          </div>
+                      )}
+
                       <div>
                           <label className="text-xs text-slate-500 block mb-1">Date of Birth</label>
                           <div className="flex items-center text-sm font-medium text-slate-900">
@@ -183,16 +217,20 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onBa
                                             </button>
                                         ) : (
                                             <div className={`p-2 rounded-lg border text-xs ${
-                                                verificationResult.isValid 
+                                                verificationResult.status === 'valid'
                                                 ? 'bg-green-50 border-green-200 text-green-800' 
-                                                : 'bg-amber-50 border-amber-200 text-amber-800'
+                                                : verificationResult.status === 'partial'
+                                                ? 'bg-amber-50 border-amber-200 text-amber-800'
+                                                : 'bg-red-50 border-red-200 text-red-800'
                                             }`}>
                                                 <div className="flex items-center font-bold mb-1">
-                                                    {verificationResult.isValid 
-                                                        ? <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> 
-                                                        : <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
-                                                    }
-                                                    {verificationResult.isValid ? 'Address Verified' : 'Needs Review'}
+                                                    {verificationResult.status === 'valid' ? (
+                                                        <><CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Valid Address</>
+                                                    ) : verificationResult.status === 'partial' ? (
+                                                        <><AlertTriangle className="w-3.5 h-3.5 mr-1.5" /> Partial Match</>
+                                                    ) : (
+                                                        <><AlertCircle className="w-3.5 h-3.5 mr-1.5" /> Not Found</>
+                                                    )}
                                                 </div>
                                                 <p className="leading-snug opacity-90">{verificationResult.details}</p>
                                                 {verificationResult.mapLink && (
