@@ -1,5 +1,3 @@
-
-
 import { Employee, Category, ApiResponse, SystemSettings, User, UserRole, Role, PermissionKey } from '../types';
 
 const EMPLOYEES_KEY = 'hrm_employees';
@@ -7,6 +5,19 @@ const CATEGORIES_KEY = 'hrm_categories';
 const SETTINGS_KEY = 'hrm_settings';
 const USERS_KEY = 'hrm_users';
 const ROLES_KEY = 'hrm_roles';
+
+// --- Helper: Robust UUID Generator ---
+const generateUUID = (): string => {
+    // Explicitly check window.crypto to use the polyfill from index.html if needed
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+        return window.crypto.randomUUID();
+    }
+    // Fallback for environments where window is undefined or crypto is missing
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+};
 
 // --- Initial Roles Data (UPDATED: Ensure Staff has Category permissions) ---
 const INITIAL_ROLES: Role[] = [
@@ -58,6 +69,8 @@ const INITIAL_CATEGORIES: Category[] = [
   { id: '200', code: 'CG', name: 'Q. Cầu Giấy', type: 'ADMIN_UNIT', parentId: '100' },
   { id: '300', code: 'YENHOA', name: 'P. Yên Hòa', type: 'ADMIN_UNIT', parentId: '200' },
   { id: '201', code: 'HC', name: 'P. Hòa Cường (Trực thuộc TP)', type: 'ADMIN_UNIT', parentId: '101' },
+  // Level 0 Example
+  { id: 'L0_CORP', code: 'CORP', name: 'Tập đoàn (Level 0)', type: 'DEPARTMENT', parentId: null, level: 0 },
 ];
 
 const INITIAL_SETTINGS: SystemSettings = {
