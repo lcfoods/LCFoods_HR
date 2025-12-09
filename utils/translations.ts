@@ -1,5 +1,4 @@
 
-
 export type Language = 'en' | 'vn';
 
 export const translations = {
@@ -34,15 +33,19 @@ export const translations = {
       report: "Report",
       reportDesc: "Fill data into uploaded template",
       selectAll: "Select All",
-      deselectAll: "Deselect All"
+      deselectAll: "Deselect All",
+      start: "Start",
+      submit: "Submit",
+      score: "Score",
+      close: "Close"
     },
     auth: {
       title: "Sign in to your account",
       selectCompany: "Select Workspace",
-      email: "Email address",
+      email: "Email or Username",
       password: "Password",
       noAccess: "You do not have access to this workspace.",
-      invalid: "Invalid email or password.",
+      invalid: "Invalid credentials.",
       loadingSystem: "Loading System...",
       signIn: "Sign in"
     },
@@ -57,6 +60,7 @@ export const translations = {
       positions: "Positions",
       locations: "Locations",
       adminUnits: "Admin Units",
+      training: "Training & E-Learning",
       system: "System",
       configuration: "Configuration",
       userManagement: "User Management",
@@ -254,7 +258,9 @@ export const translations = {
         roleLabel: "Role",
         confirmDelete: "Are you sure you want to delete this user?",
         reqFields: "Name, Email, and Role are required.",
-        passwordPlace: "Leave blank to keep current password"
+        passwordPlace: "Leave blank to keep current password",
+        username: "Username (Optional)",
+        usernamePlaceholder: "e.g. jdoe"
     },
     roleManager: {
         title: "Roles & Permissions",
@@ -283,8 +289,31 @@ export const translations = {
             SYSTEM_USERS_VIEW: "View Users",
             SYSTEM_USERS_MANAGE: "Manage Users",
             SYSTEM_ROLES_VIEW: "View Roles",
-            SYSTEM_ROLES_MANAGE: "Manage Roles"
+            SYSTEM_ROLES_MANAGE: "Manage Roles",
+            TRAINING_VIEW: "View Training",
+            TRAINING_MANAGE: "Manage Courses"
         }
+    },
+    training: {
+        title: "Training Center",
+        subtitle: "Employee learning and development hub.",
+        createCourse: "Create Course",
+        courseTitle: "Course Title",
+        courseDesc: "Description",
+        videoUrl: "Video URL (MP4 or YouTube Embed)",
+        duration: "Duration (min)",
+        addQuestion: "Add Quiz Question",
+        question: "Question",
+        option: "Option",
+        correctAnswer: "Correct Answer (Index 0-3)",
+        startQuiz: "Take Quiz",
+        retakeQuiz: "Retake Quiz",
+        completed: "Completed",
+        score: "Your Score",
+        pass: "PASS",
+        fail: "FAIL",
+        noCourses: "No courses available at the moment.",
+        deleteConfirm: "Delete this course?"
     }
   },
   vn: {
@@ -318,15 +347,19 @@ export const translations = {
       report: "Báo cáo",
       reportDesc: "Điền dữ liệu vào file mẫu tải lên",
       selectAll: "Chọn tất cả",
-      deselectAll: "Bỏ chọn tất cả"
+      deselectAll: "Bỏ chọn tất cả",
+      start: "Bắt đầu",
+      submit: "Nộp bài",
+      score: "Điểm số",
+      close: "Đóng"
     },
     auth: {
       title: "Đăng nhập hệ thống",
       selectCompany: "Chọn Công ty / Chi nhánh",
-      email: "Địa chỉ Email",
+      email: "Email hoặc Tên đăng nhập",
       password: "Mật khẩu",
       noAccess: "Bạn không có quyền truy cập công ty này.",
-      invalid: "Email hoặc mật khẩu không đúng.",
+      invalid: "Thông tin đăng nhập không đúng.",
       loadingSystem: "Đang tải hệ thống...",
       signIn: "Đăng nhập"
     },
@@ -341,6 +374,7 @@ export const translations = {
       positions: "Chức vụ",
       locations: "Địa điểm",
       adminUnits: "Đơn vị hành chính",
+      training: "Đào tạo & E-Learning",
       system: "Hệ thống",
       configuration: "Cấu hình",
       userManagement: "Quản lý người dùng",
@@ -538,7 +572,9 @@ export const translations = {
         roleLabel: "Vai trò",
         confirmDelete: "Bạn có chắc muốn xóa người dùng này?",
         reqFields: "Tên, Email và Vai trò là bắt buộc.",
-        passwordPlace: "Để trống nếu giữ nguyên mật khẩu cũ"
+        passwordPlace: "Để trống nếu giữ nguyên mật khẩu cũ",
+        username: "Tên đăng nhập (Tùy chọn)",
+        usernamePlaceholder: "VD: nhanvien_a"
     },
     roleManager: {
         title: "Phân quyền & Vai trò",
@@ -567,8 +603,31 @@ export const translations = {
             SYSTEM_USERS_VIEW: "Xem Người dùng",
             SYSTEM_USERS_MANAGE: "Quản lý Người dùng",
             SYSTEM_ROLES_VIEW: "Xem Vai trò",
-            SYSTEM_ROLES_MANAGE: "Quản lý Vai trò"
+            SYSTEM_ROLES_MANAGE: "Quản lý Vai trò",
+            TRAINING_VIEW: "Xem Khóa học",
+            TRAINING_MANAGE: "Quản lý Đào tạo"
         }
+    },
+    training: {
+        title: "Trung tâm Đào tạo",
+        subtitle: "Cổng học tập và phát triển nhân viên.",
+        createCourse: "Tạo khóa học",
+        courseTitle: "Tên khóa học",
+        courseDesc: "Mô tả",
+        videoUrl: "URL Video (MP4 hoặc Mã nhúng YouTube)",
+        duration: "Thời lượng (phút)",
+        addQuestion: "Thêm câu hỏi trắc nghiệm",
+        question: "Câu hỏi",
+        option: "Lựa chọn",
+        correctAnswer: "Đáp án đúng (Index 0-3)",
+        startQuiz: "Làm bài kiểm tra",
+        retakeQuiz: "Học lại",
+        completed: "Đã hoàn thành",
+        score: "Điểm số",
+        pass: "ĐẠT",
+        fail: "KHÔNG ĐẠT",
+        noCourses: "Hiện chưa có khóa học nào.",
+        deleteConfirm: "Bạn có chắc muốn xóa khóa học này?"
     }
   }
 };
