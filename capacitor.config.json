@@ -1,0 +1,8 @@
+{
+  "appId": "com.lcfoods.hrm",
+  "appName": "HR Master Pro",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
