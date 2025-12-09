@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { User, Category, PermissionKey } from '../types';
 import { StorageService } from '../services/storageService';
@@ -20,7 +21,8 @@ import {
   X,
   ShieldCheck,
   Check,
-  AlertTriangle
+  AlertTriangle,
+  GraduationCap
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -137,6 +139,9 @@ export const Layout: React.FC<LayoutProps> = ({
             <NavItem page="positions" icon={Briefcase} label={t.sidebar.positions} permKey="CATEGORY_VIEW" />
             <NavItem page="locations" icon={MapPin} label={t.sidebar.locations} permKey="CATEGORY_VIEW" />
             <NavItem page="admin-units" icon={Landmark} label={t.sidebar.adminUnits} permKey="CATEGORY_VIEW" />
+
+            <div className="px-4 mt-6 mb-2 text-xs font-semibold text-slate-500 uppercase">E-Learning</div>
+            <NavItem page="training" icon={GraduationCap} label={t.sidebar.training} permKey="TRAINING_VIEW" />
 
             <div className="px-4 mt-6 mb-2 text-xs font-semibold text-slate-500 uppercase">{t.sidebar.system}</div>
             <NavItem page="settings" icon={SettingsIcon} label={t.sidebar.configuration} permKey="SYSTEM_SETTINGS" />

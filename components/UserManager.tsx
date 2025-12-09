@@ -29,6 +29,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
     const initialFormState: Partial<User> = {
         name: '',
         email: '',
+        username: '',
         password: '',
         roleId: '', 
         companyId: ''
@@ -49,6 +50,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
         setFormData({
             name: user.name,
             email: user.email,
+            username: user.username || '',
             password: '', 
             roleId: user.roleId || '',
             companyId: user.companyId || ''
@@ -88,6 +90,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
             id: editingId || crypto.randomUUID(),
             name: formData.name || '',
             email: formData.email || '',
+            username: formData.username || undefined,
             role: isAdminRole ? UserRole.ADMIN : UserRole.STAFF, 
             roleId: formData.roleId,
             password: formData.password || undefined,
@@ -159,7 +162,10 @@ export const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
                                         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold mr-3">
                                             {user.name.charAt(0)}
                                         </div>
-                                        <div className="text-sm font-medium text-slate-900">{user.name}</div>
+                                        <div>
+                                            <div className="text-sm font-medium text-slate-900">{user.name}</div>
+                                            {user.username && <div className="text-xs text-slate-500">@{user.username}</div>}
+                                        </div>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -213,17 +219,31 @@ export const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
                                     className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">{t.auth.email}</label>
-                                <input
-                                    type="email"
-                                    required
-                                    disabled={!!editingId}
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg disabled:bg-slate-100"
-                                />
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t.auth.email}</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        disabled={!!editingId}
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg disabled:bg-slate-100"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t.userManager.username}</label>
+                                    <input
+                                        type="text"
+                                        value={formData.username}
+                                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                        placeholder={t.userManager.usernamePlaceholder}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                                    />
+                                </div>
                             </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
                                     <Key className="w-3 h-3" /> {t.auth.password}

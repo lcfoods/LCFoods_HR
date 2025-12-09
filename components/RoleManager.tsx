@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { StorageService } from '../services/storageService';
 import { Role, PermissionKey } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Shield, Plus, Trash2, Edit2, Save, X, Lock, AlertTriangle, LayoutGrid, Users, Database, Settings, Filter } from 'lucide-react';
+import { Shield, Plus, Trash2, Edit2, Save, X, Lock, AlertTriangle, LayoutGrid, Users, Database, Settings, Filter, GraduationCap } from 'lucide-react';
 
 export const RoleManager = () => {
     const [roles, setRoles] = useState<Role[]>([]);
@@ -41,6 +41,14 @@ export const RoleManager = () => {
                 { key: 'CATEGORY_CREATE' as PermissionKey, label: t.roleManager.modules.CATEGORY_CREATE },
                 { key: 'CATEGORY_EDIT' as PermissionKey, label: t.roleManager.modules.CATEGORY_EDIT },
                 { key: 'CATEGORY_DELETE' as PermissionKey, label: t.roleManager.modules.CATEGORY_DELETE },
+            ]
+        },
+        {
+            title: "Training",
+            icon: GraduationCap,
+            items: [
+                { key: 'TRAINING_VIEW' as PermissionKey, label: t.roleManager.modules.TRAINING_VIEW },
+                { key: 'TRAINING_MANAGE' as PermissionKey, label: t.roleManager.modules.TRAINING_MANAGE },
             ]
         },
         {
