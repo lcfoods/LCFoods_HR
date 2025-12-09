@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Course, CourseProgress, User, Question, Section, Lesson } from '../types';
 import { StorageService } from '../services/storageService';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../contexts/LanguageContext';           
 import { 
   Plus, PlayCircle, Clock, Trash2, Edit2, Save, X, 
   CheckCircle, AlertCircle, FileQuestion, ArrowLeft, GraduationCap, 
