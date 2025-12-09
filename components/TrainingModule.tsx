@@ -1,19 +1,47 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Course, CourseProgress, User, Question, Section, Lesson } from '../types';
 import { StorageService } from '../services/storageService';
-import { useLanguage } from '../contexts/LanguageContext';           
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Plus, PlayCircle, Clock, Trash2, Edit2, Save, X, 
   CheckCircle, AlertCircle, FileQuestion, ArrowLeft, GraduationCap, 
   ChevronDown, ChevronRight, BookOpen, Search, Star, BarChart, User as UserIcon, Lock, Unlock, Play,
   Video, FileText, MoreVertical, GripVertical, XCircle, RotateCcw, Trophy,
-  ArrowUp, ArrowDown
+  ArrowUp, ArrowDown, Link as LinkIcon
 } from 'lucide-react';
 
 interface TrainingModuleProps {
     currentUser: User;
     companyId: string;
 }
+
+// --- HELPER: YouTube URL Converter ---
+const getYouTubeEmbedUrl = (url: string) => {
+    if (!url) return '';
+    try {
+        let videoId = '';
+        
+        // Case 1: Already embed link
+        if (url.includes('youtube.com/embed/')) return url;
+        
+        // Case 2: Standard watch link (youtube.com/watch?v=...)
+        if (url.includes('youtube.com/watch')) {
+            const urlObj = new URL(url);
+            videoId = urlObj.searchParams.get('v') || '';
+        } 
+        // Case 3: Short link (youtu.be/...)
+        else if (url.includes('youtu.be/')) {
+            videoId = url.split('youtu.be/')[1]?.split('?')[0];
+        }
+
+        if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+        
+        // Return original if not recognized as YouTube (might be MP4)
+        return url;
+    } catch (e) {
+        return url;
+    }
+};
 
 export const TrainingModule: React.FC<TrainingModuleProps> = ({ currentUser, companyId }) => {
     const [view, setView] = useState<'HOME' | 'BUILDER' | 'VIEWER' | 'DETAIL'>('HOME');
@@ -463,6 +491,11 @@ const LearningPlayer = ({ course, userId, onBack }: { course: Course, userId: st
         setQuizScore(0);
     };
 
+    // --- AUTO-CONVERT URL FOR PLAYER ---
+    const activeVideoUrl = useMemo(() => {
+        return getYouTubeEmbedUrl(currentLesson.contentUrl || '');
+    }, [currentLesson.contentUrl]);
+
     return (
         <div className="fixed inset-0 z-50 bg-white flex flex-col">
             {/* Player Header */}
@@ -484,12 +517,17 @@ const LearningPlayer = ({ course, userId, onBack }: { course: Course, userId: st
                 {/* Left: Content Player */}
                 <div className="flex-1 bg-black flex flex-col relative overflow-y-auto">
                     <div className="flex-1 flex items-center justify-center bg-zinc-900">
-                        {currentLesson.type === 'VIDEO' && currentLesson.contentUrl ? (
+                        {currentLesson.type === 'VIDEO' && activeVideoUrl ? (
                              <div className="w-full h-full max-h-[80vh] aspect-video">
-                                 {currentLesson.contentUrl.includes('youtube') ? (
-                                     <iframe src={currentLesson.contentUrl} className="w-full h-full" allowFullScreen allow="autoplay"></iframe>
+                                 {activeVideoUrl.includes('youtube.com/embed') ? (
+                                     <iframe 
+                                        src={activeVideoUrl} 
+                                        className="w-full h-full" 
+                                        allowFullScreen 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                     ></iframe>
                                  ) : (
-                                     <video src={currentLesson.contentUrl} controls className="w-full h-full bg-black"></video>
+                                     <video src={activeVideoUrl} controls className="w-full h-full bg-black"></video>
                                  )}
                              </div>
                         ) : currentLesson.type === 'QUIZ' ? (
@@ -599,7 +637,10 @@ const LearningPlayer = ({ course, userId, onBack }: { course: Course, userId: st
                                 </div>
                             </div>
                         ) : (
-                            <div className="text-white">Unsupported Lesson Type</div>
+                            <div className="flex flex-col items-center justify-center text-slate-500">
+                                <AlertCircle className="w-12 h-12 mb-2 opacity-50"/>
+                                <p>Video not available or link is invalid.</p>
+                            </div>
                         )}
                     </div>
                     
@@ -747,6 +788,14 @@ const CourseBuilder = ({ course, onSave, onCancel, companyId }: { course: Course
                 : s
             )
         }));
+    };
+
+    // Auto-convert URL on Blur
+    const handleUrlBlur = (sectionId: string, lessonId: string, url: string) => {
+        const embedUrl = getYouTubeEmbedUrl(url);
+        if (embedUrl !== url) {
+            updateLesson(sectionId, lessonId, { contentUrl: embedUrl });
+        }
     };
 
     const deleteLesson = (sectionId: string, lessonId: string) => {
@@ -911,13 +960,19 @@ const CourseBuilder = ({ course, onSave, onCancel, companyId }: { course: Course
                                                              <option value="VIDEO">Video</option>
                                                              <option value="QUIZ">Quiz</option>
                                                          </select>
-                                                         <input 
-                                                            type="text" 
-                                                            value={lesson.contentUrl || ''} 
-                                                            onChange={(e) => updateLesson(section.id, lesson.id, { contentUrl: e.target.value })}
-                                                            className="text-sm border border-slate-200 rounded px-2 py-1 focus:border-blue-500 outline-none font-mono text-xs text-slate-500 flex-1"
-                                                            placeholder={lesson.type === 'QUIZ' ? 'Quiz instructions (optional)' : 'YouTube / Video URL'}
-                                                         />
+                                                         <div className="relative flex-1">
+                                                            <input 
+                                                                type="text" 
+                                                                value={lesson.contentUrl || ''} 
+                                                                onChange={(e) => updateLesson(section.id, lesson.id, { contentUrl: e.target.value })}
+                                                                onBlur={(e) => handleUrlBlur(section.id, lesson.id, e.target.value)}
+                                                                className="w-full text-sm border border-slate-200 rounded px-2 py-1 focus:border-blue-500 outline-none font-mono text-xs text-slate-500"
+                                                                placeholder={lesson.type === 'QUIZ' ? 'Quiz instructions' : 'YouTube Link (Auto-converts)'}
+                                                            />
+                                                            {lesson.type === 'VIDEO' && (
+                                                                <LinkIcon className="absolute right-2 top-1.5 w-3 h-3 text-slate-300" />
+                                                            )}
+                                                         </div>
                                                      </div>
                                                  </div>
                                                  <input 
