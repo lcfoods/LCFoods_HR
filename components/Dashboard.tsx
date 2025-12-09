@@ -5,7 +5,7 @@ import { Users, TrendingUp, UserCheck, UserMinus, Calendar, Briefcase, Activity 
 
 interface DashboardProps {
   currentCompanyId: string;
-}
+}    
 
 export const Dashboard: React.FC<DashboardProps> = ({ currentCompanyId }) => {
   const employees = StorageService.getEmployees(currentCompanyId);
