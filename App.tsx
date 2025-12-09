@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Layout } from './components/Layout';
 import { EmployeeForm } from './components/EmployeeForm';
@@ -7,8 +8,9 @@ import { CategoryManager } from './components/CategoryManager';
 import { SmartAssistant } from './components/SmartAssistant';
 import { Settings } from './components/Settings';
 import { UserManager } from './components/UserManager';
-import { RoleManager } from './components/RoleManager'; // Import
+import { RoleManager } from './components/RoleManager'; 
 import { Dashboard } from './components/Dashboard';
+import { TrainingModule } from './components/TrainingModule'; // Import Training
 import { User, Category, PermissionKey } from './types';
 import { StorageService } from './services/storageService';
 import { Building, AlertCircle, Briefcase, Lock } from 'lucide-react';
@@ -62,10 +64,11 @@ function AppContent() {
     e.preventDefault();
     setLoginError('');
     const form = e.target as HTMLFormElement;
-    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+    // Updated: Input can be email or username
+    const identifier = (form.elements.namedItem('email') as HTMLInputElement).value;
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
     
-    const authenticatedUser = StorageService.authenticate(email, password);
+    const authenticatedUser = StorageService.authenticate(identifier, password);
 
     if (authenticatedUser) {
         // Validate Company Access
@@ -100,7 +103,7 @@ function AppContent() {
         return hasPermission('DASHBOARD') ? <Dashboard currentCompanyId={currentCompanyId} /> : <AccessDenied />;
       
       case 'employee-list':
-        return hasPermission('EMPLOYEE_VIEW') ? ( // Changed to EMPLOYEE_VIEW
+        return hasPermission('EMPLOYEE_VIEW') ? ( 
           <EmployeeList 
             currentCompanyId={currentCompanyId} 
             onAddNew={() => {
@@ -115,7 +118,7 @@ function AppContent() {
                 setEditingEmployeeId(id);
                 setCurrentPage('employees');
             }}
-            user={user!} // Pass user
+            user={user!} 
           />
         ) : <AccessDenied />;
       
@@ -131,7 +134,6 @@ function AppContent() {
         ) : <AccessDenied />;
       
       case 'employees':
-        // Check create or edit based on context, simplify to CREATE for now or separate
         return hasPermission('EMPLOYEE_CREATE') || hasPermission('EMPLOYEE_EDIT') ? (
             <EmployeeForm 
                 currentCompanyId={currentCompanyId} 
@@ -168,6 +170,11 @@ function AppContent() {
           ? <CategoryManager type="ADMIN_UNIT" title={t.sidebar.adminUnits} isHierarchical={true} user={user!} />
           : <AccessDenied />;
       
+      case 'training':
+        return hasPermission('TRAINING_VIEW') 
+            ? <TrainingModule currentUser={user!} companyId={currentCompanyId} />
+            : <AccessDenied />;
+
       case 'settings':
         return hasPermission('SYSTEM_SETTINGS') ? <Settings /> : <AccessDenied />;
       case 'users':
@@ -229,11 +236,11 @@ function AppContent() {
                   <input
                     id="email"
                     name="email"
-                    type="email"
-                    autoComplete="email"
+                    type="text" 
+                    autoComplete="username"
                     required
                     className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    defaultValue="admin@lcfoods.com"
+                    defaultValue="admin"
                   />
                 </div>
               </div>

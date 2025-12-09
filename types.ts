@@ -25,7 +25,11 @@ export type PermissionKey =
   | 'SYSTEM_USERS_VIEW'
   | 'SYSTEM_USERS_MANAGE' // Create/Edit/Delete
   | 'SYSTEM_ROLES_VIEW'
-  | 'SYSTEM_ROLES_MANAGE'; // Create/Edit/Delete
+  | 'SYSTEM_ROLES_MANAGE'
+  
+  // Training
+  | 'TRAINING_VIEW'
+  | 'TRAINING_MANAGE';
 
 export interface Role {
   id: string;
@@ -38,6 +42,7 @@ export interface Role {
 
 export interface User {
   id: string; 
+  username?: string; // New: Allow login by username
   email: string;
   name: string;
   role: UserRole; 
@@ -105,4 +110,52 @@ export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   isThinking?: boolean;
+}
+
+// --- Training Interfaces (Gitiho Style) ---
+
+export interface Question {
+  id: string;
+  text: string;
+  options: string[]; // List of answers
+  correctIndex: number; // Index of the correct answer (0-3)
+}
+
+export interface Lesson {
+  id: string;
+  title: string;
+  type: 'VIDEO' | 'QUIZ' | 'READING';
+  contentUrl?: string; // YouTube Embed or MP4
+  textContent?: string; // For READING type
+  durationMinutes: number;
+  questions?: Question[]; // For QUIZ type
+}
+
+export interface Section {
+  id: string;
+  title: string;
+  lessons: Lesson[];
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail?: string;
+  instructor?: string; // New: Instructor Name
+  level?: 'Beginner' | 'Intermediate' | 'Advanced';
+  sections: Section[]; // Hierarchical content
+  totalDurationMinutes: number;
+  companyId?: string; 
+  createdAt: string;
+}
+
+export interface CourseProgress {
+  userId: string;
+  courseId: string;
+  status: 'Not Started' | 'In Progress' | 'Completed';
+  completedLessonIds: string[]; // Track individual lessons
+  lastAccessedLessonId?: string; // Resume where left off
+  quizScores: Record<string, number>; // lessonId -> score
+  completedAt?: string;
 }
